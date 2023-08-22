@@ -1,38 +1,74 @@
 "use client";
 import request from "@/fetch data/requests";
-import { useEffect, useState } from "react";
-
+import { use, useEffect, useState } from "react";
+import PlayTrailer from "./components/PlayTrailer";
+const IMAGE_URL = "https://image.tmdb.org/t/p/w500/";
 export default function Home() {
-  const [data, setData] = useState();
-  const [movie, setMovie] = useState();
+  const [movies, setMovies] = useState();
+  const [genres, setGenres] = useState();
+  const [movieName, setMovieName] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    const options = {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization:
-          "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjMDFhNTk0MmEzYzA5YTY3YzJkYzEyYmUwYzQyZGY0NiIsInN1YiI6IjY0ZTI2MWVkYjc3ZDRiMTE0MWZhN2ZhYiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.bAoWvQofydxqvw-aqVg1yCcalSELuIgnzY_jIqnS-tg",
-      },
+    const getData = async () => {
+      setIsLoading(true);
+      setMovies(await request("movie"));
+      setGenres(await request("genres"));
+      setIsLoading(false);
     };
-
-    fetch(
-      "https://api.themoviedb.org/3/collection/9/images?include_image_language=en%2Cnull&language=english",
-      options
-    )
-      .then((response) => response.json())
-      .then((response) => setData(response))
-      .catch((err) => console.error(err));
-
-    fetch("https://api.themoviedb.org/3/movie/changes?page=1", options)
-      .then((response) => response.json())
-      .then((response) => setMovie(response))
-      .catch((err) => console.error(err));
+    getData();
   }, []);
-  console.log(data);
-  console.log(movie);
-  return (
-    <div>
-      <img src={"https://api.themoviedb.org/3/collection/10/images"} />
-    </div>
-  );
+  const handleTrailer = (name) => {
+    if (name) {
+      setMovieName(name);
+    }
+    setIsOpen(!isOpen);
+  };
+  console.log(movies);
+  if (isLoading) {
+    return <div>Loading</div>;
+  }
+  if (!isLoading) {
+    return (
+      <div className="flex flex-wrap justify-between gap-y-4 px-2">
+        {movies.results.map((items) => {
+          return (
+            <div
+              onClick={(e) => handleTrailer(items.original_title)}
+              className="w-[22.5%] flex flex-col gap-1"
+            >
+              <img
+                className="aspect-square"
+                src={`${IMAGE_URL}${items.backdrop_path}`}
+                style={{
+                  backgroundColor: "gray",
+                }}
+                loading="lazy"
+              />
+              <p className="w-full flex flex-col gap-2">
+                <span className="truncate">{items.original_title}</span>
+                <span>rate: {items.vote_average}</span>
+                <span>{items.vote_count}</span>
+                <span className="truncate">over viwe: {items.overview}</span>
+              </p>
+              <p className="w-full flex gap-2 flex-wrap">
+                {genres.genres
+                  .filter(
+                    (genre, index) => items.genre_ids.indexOf(genre.id) !== -1
+                  )
+                  .map((item) => {
+                    return <span className="text-xs">#{item.name}</span>;
+                  })}
+              </p>
+            </div>
+          );
+        })}
+        {isOpen ? (
+          <PlayTrailer movieName={movieName} handleTrailer={handleTrailer} />
+        ) : (
+          ""
+        )}
+      </div>
+    );
+  }
 }

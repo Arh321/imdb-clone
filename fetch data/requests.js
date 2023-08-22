@@ -1,5 +1,21 @@
-const request = async () => {
+const request = async (api) => {
+  const MOVIE_API =
+    "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc";
+  const GENRES_API =
+    "https://api.themoviedb.org/3/genre/movie/list?language=en";
+  let url;
   let data;
+  switch (api) {
+    case "movie":
+      url = MOVIE_API;
+      break;
+    case "genres":
+      url = GENRES_API;
+      break;
+    default:
+      break;
+  }
+
   const options = {
     method: "GET",
     headers: {
@@ -10,17 +26,14 @@ const request = async () => {
   };
 
   try {
-    await fetch(
-      "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc",
-      options
-    )
+    await fetch(url, options)
       .then((response) => response.json())
       .then((response) => (data = response))
       .catch((err) => console.error(err));
   } catch (error) {
     console.log(error);
   }
-  console.log(data);
+
   return data;
 };
 
